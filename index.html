@@ -177,10 +177,10 @@ tr:hover td{background:#E6F1FB;}
         <input type="text" id="io-hogi" placeholder="호기 (예: 3, 5, 없으면 비워두세요)" style="flex:1;" />
       </div>
 
-     <div class="site-mgmt" id="site-mgmt-box">
+    <div class="site-mgmt" id="site-mgmt-box">
         <div class="site-mgmt-title"><i class="ti ti-settings"></i> 시스템 기준 정보 관리</div>
         <div class="new-site-row" style="display: flex; gap: 5px;">
-          <select id="mgmt-type-select" style="width: 90px; padding: 6px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+          <select id="mgmt-type-select" style="width: 85px; padding: 6px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background:#fff;">
             <option value="site">현장</option>
             <option value="item">품목</option>
           </select>
@@ -446,16 +446,104 @@ function renderSiteSel(){
 
 async function addSite(){
   const input = document.getElementById('new-site-input');
-  const name  = input.value.trim();
+  const name = input.value.trim();
   if(!name){ alert('현장명을 입력하세요.'); return; }
   if(sites.includes(name)){ alert('이미 존재하는 현장입니다.'); return; }
   sites.push(name);
-  
   renderSiteSel();
   document.getElementById('io-site-sel').value = name;
   input.value = '';
   await saveToCloud();
 }
+
+// ==========================================================
+// [여기서부터 새로 삽입] 시스템 기준정보(현장/품목) 통합 제어 함수
+// ==========================================================
+let items = ['레진(후지전기)', '레진(삼양사)', '물필터', '레진헤드', '집수봉', '활성탄필터', '마이크로필터', '인버터필터', '개질기필터', 'GS-23', 'GS-6', '방열팬'];
+
+// 1. 드롭다운 선택창(현장 vs 품목)에 맞춰 데이터 추가하는 함수
+async function handleMgmtAdd() {
+  const type = document.getElementById('mgmt-type-select').value;
+  const input = document.getElementById('mgmt-input');
+  const name = input.value.trim();
+  
+  if(!name) { alert('등록할 이름을 입력하세요.'); return; }
+
+  if(type === 'site') {
+    if(sites.includes(name)){ alert('이미 존재하는 현장입니다.'); return; }
+    sites.push(name);
+    renderSiteSel();
+    if(document.getElementById('io-site-sel')) document.getElementById('io-site-sel').value = name;
+  } else {
+    if(items.includes(name)){ alert('이미 존재하는 품목입니다.'); return; }
+    items.push(name);
+    renderItemSel(); 
+    renderInv();     
+    if(document.getElementById('io-item')) document.getElementById('io-item').value = name;
+  }
+
+  input.value = '';
+  await saveToCloud(); 
+}
+
+// 2. 선택된 항목을 감지하여 삭제하는 함수
+async function handleMgmtDel() {
+  const type = document.getElementById('mgmt-type-select').value;
+  
+  if(type === 'site') {
+    const sel = document.getElementById('io-site-sel');
+    const name = sel ? sel.value : "";
+    if(!name){ alert('우측 입출고 등록 창의 [현장 선택]에서 삭제할 현장을 먼저 지정해 주세요.'); return; }
+    if(!confirm(`"${name}" 현장을 시스템에서 삭제하시겠습니까?`)) return;
+    
+    sites = sites.filter(s => s !== name);
+    renderSiteSel();
+    if(document.getElementById('io-site-sel')) document.getElementById('io-site-sel').value = '';
+  } else {
+    const sel = document.getElementById('io-item');
+    const name = sel ? sel.value : "";
+    if(!name){ alert('우측 입출고 등록 창의 [품목 선택]에서 삭제할 품목을 먼저 지정해 주세요.'); return; }
+    if(!confirm(`"${name}" 품목을 시스템에서 제외하시겠습니까?\n(기존 누적 입출고 이력 데이터는 정상 보존됩니다.)`)) return;
+
+    items = items.filter(i => i !== name);
+    renderItemSel();
+    renderInv(); 
+    if(document.getElementById('io-item')) document.getElementById('io-item').value = '';
+  }
+
+  await saveToCloud(); 
+}
+
+// 3. 품목 선택 박스들을 동적으로 그려주는 함수
+function renderItemSel(){
+  const ioItem = document.getElementById('io-item');
+  const logItem = document.getElementById('log-filter-item');
+  const anItem = document.getElementById('an-item');
+
+  const prevIo = ioItem ? ioItem.value : "";
+  const prevLog = logItem ? logItem.value : "";
+  const prevAn = anItem ? anItem.value : "";
+
+  if(ioItem) ioItem.innerHTML = '<option value="">품목 선택</option>';
+  if(logItem) logItem.innerHTML = '<option value="">전체 품목</option>';
+  if(anItem) anItem.innerHTML = '<option value="">전체 품목</option>';
+
+  items.forEach(item => {
+    if(ioItem) ioItem.innerHTML += `<option value="${item}">${item}</option>`;
+    if(logItem) logItem.innerHTML += `<option value="${item}">${item}</option>`;
+    if(anItem) anItem.innerHTML += `<option value="${item}">${item}</option>`;
+  });
+
+  if(prevIo && items.includes(prevIo)) ioItem.value = prevIo;
+  if(prevLog && items.includes(prevLog)) logItem.value = prevLog;
+  if(prevAn && items.includes(prevAn)) anItem.value = prevAn;
+}
+// ==========================================================
+// [여기까지 새로 삽입 완료]
+// ==========================================================
+
+function renderInv() {
+  const tbody = document.getElementById('inventory-tbody');
 
 async function delSite(){
   const sel  = document.getElementById('io-site-sel');
