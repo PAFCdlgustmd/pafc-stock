@@ -271,7 +271,7 @@ tr:hover td{background:#E6F1FB;}
 </div>
 
 <script>
-// 🌟 대리님의 Apps Script 배포 URL (기존 주소 완벽 유지)
+// 🌟 대리님의 Apps Script 배포 URL 유지
 const GOOGLE_WEB_APP_URL = "https://script.google.com/shortcuts/s/AKfycbzSdfv1t8ZiswB_vYt8v7yD-v_q0w6N2bXUfHpx9I1T_mN_pA_UvU2p_1ZzQ8x_O9w/exec";
 
 let logs = [];
@@ -286,7 +286,6 @@ window.onload = function() {
   loadFromCloud();
 };
 
-// 💡 시스템 기준정보 통합 관리 (추가 기능)
 async function handleMgmtAdd() {
   const type = document.getElementById('mgmt-type-select').value;
   const input = document.getElementById('mgmt-input');
@@ -311,7 +310,6 @@ async function handleMgmtAdd() {
   await saveToCloud(); 
 }
 
-// 💡 시스템 기준정보 통합 관리 (삭제 기능)
 async function handleMgmtDel() {
   const type = document.getElementById('mgmt-type-select').value;
   
@@ -339,7 +337,6 @@ async function handleMgmtDel() {
   await saveToCloud(); 
 }
 
-// 💡 동적 품목 마스터 드롭다운 동기화 렌더링
 function renderItemSel(){
   const ioItem = document.getElementById('io-item');
   const logItem = document.getElementById('log-filter-item');
@@ -373,7 +370,7 @@ function renderInv() {
   document.getElementById('th-year-in').innerText = `${year} 입고`;
   document.getElementById('th-year-out').innerText = `${year} 출고`;
   
-  const baseItems = items; // 동적 변수로 연동 완료
+  const baseItems = items;
   
   let totalStockAll = 0;
   let dangerCount = 0;
@@ -808,5 +805,4 @@ function showTab(tab){
 }
 </script>
 </body>
-</html>
 </html>
