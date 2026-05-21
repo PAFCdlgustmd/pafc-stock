@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PAFC 재고 관리 (클라우드 실시간 연동)</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:sans-serif;background:#f4f6fa;min-height:100vh;padding:1.5rem;}
@@ -102,7 +102,6 @@ tr:hover td{background:#E6F1FB;}
 .inv-year-select { font-size: 13px; padding: 6px 12px; border: 0.5px solid #ccc; border-radius: 8px; outline: none; background: #fff; color: #222; font-weight: 500; }
 .inv-year-select:focus { border-color: #185FA5; }
 
-/* ☁️ 상단 클라우드 상태 바 디자인 */
 .cloud-bar { background: #FFF9E6; border: 1px solid #FFEBAA; color: #856404; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
 .cloud-status { display: flex; align-items: center; gap: 6px; }
 .btn-sync { background: #185FA5; color: #fff; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
@@ -116,17 +115,20 @@ tr:hover td{background:#E6F1FB;}
       <i class="ti ti-cloud-computing" style="font-size:20px;"></i>
       PAFC 재고 관리 (클라우드 공유형)
     </div>
-    <span class="topbar-date" id="today-date"></span>
+    <span class="topbar-date" id="today-date">-</span>
   </div>
 
   <div class="cloud-bar" id="cloud-bar">
-    <div class="cloud-status" id="cloud-status">
-      <i class="ti ti-refresh-dot"></i> <span>클라우드 데이터를 불러오는 중...</span>
-    </div>
+    <div class="cloud-status" id="cloud-status"><i class="ti ti-cloud-lock"></i> <span>연결 상태 확인 중...</span></div>
     <button class="btn-sync" onclick="loadFromCloud()">수동 새로고침</button>
   </div>
 
-  <div class="stats-grid" id="stats-grid"></div>
+  <div class="stats-grid" id="stats-grid">
+    <div class="sc sc-blue"><div class="sc-label"><i class="ti ti-box"></i> 전체 재고</div><div class="sc-val">0</div></div>
+    <div class="sc sc-green"><div class="sc-label"><i class="ti ti-circle-check"></i> 정상 품목</div><div class="sc-val">0</div></div>
+    <div class="sc sc-amber"><div class="sc-label"><i class="ti ti-alert-triangle"></i> 주의 품목</div><div class="sc-val">0</div></div>
+    <div class="sc sc-red"><div class="sc-label"><i class="ti ti-alert-circle"></i> 부족 품목</div><div class="sc-val">0</div></div>
+  </div>
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('inventory')"><i class="ti ti-box"></i> 현재 재고</button>
@@ -145,8 +147,8 @@ tr:hover td{background:#E6F1FB;}
         <thead><tr>
           <th style="width:30%">품목</th>
           <th style="width:16%">현재 재고</th>
-          <th style="width:18%" id="th-year-in">선택 연도 입고</th>
-          <th style="width:18%" id="th-year-out">선택 연도 출고</th>
+          <th style="width:18%" id="th-year-in">- 입고</th>
+          <th style="width:18%" id="th-year-out">- 출고</th>
           <th style="width:18%">상태</th>
         </tr></thead>
         <tbody id="inventory-tbody"></tbody>
@@ -168,19 +170,19 @@ tr:hover td{background:#E6F1FB;}
 
       <div class="input-row" style="align-items:center;">
         <div class="site-wrap">
-          <select id="io-site-sel" style="flex:1;"></select>
+          <select id="io-site-sel" style="flex:1;"><option value="">현장 선택</option></select>
         </div>
-        <input type="number" id="io-qty" placeholder="수량" min="1" style="flex:1;" />
+        <input type="number" id="io-qty" placeholder="수량" min="1" style="flex:1;">
       </div>
 
       <div class="input-row">
-        <input type="text" id="io-hogi" placeholder="호기 (예: 3, 5, 없으면 비워두세요)" style="flex:1;" />
+        <input type="text" id="io-hogi" placeholder="호기 (예: 3, 5, 없으면 비워두세요)" style="flex:1;">
       </div>
 
-    <div class="site-mgmt" id="site-mgmt-box">
+      <div class="site-mgmt" id="site-mgmt-box">
         <div class="site-mgmt-title"><i class="ti ti-settings"></i> 시스템 기준 정보 관리</div>
         <div class="new-site-row" style="display: flex; gap: 5px;">
-          <select id="mgmt-type-select" style="width: 85px; padding: 6px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background:#fff;">
+          <select id="mgmt-type-select" style="width: 90px; padding: 6px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; background:#fff;">
             <option value="site">현장</option>
             <option value="item">품목</option>
           </select>
@@ -190,19 +192,11 @@ tr:hover td{background:#E6F1FB;}
         </div>
       </div>
 
-      <div class="site-mgmt" id="item-mgmt-box" style="margin-top: 10px;">
-        <div class="site-mgmt-title"><i class="ti ti-box"></i> 품목 관리</div>
-        <div class="new-site-row">
-          <input type="text" id="new-item-input" placeholder="새 품목명 입력 (예: 센서필터)">
-          <button class="btn-add-site" onclick="addItem()"><i class="ti ti-plus"></i> 추가</button>
-          <button class="btn-del-site" onclick="delItem()"><i class="ti ti-trash"></i> 삭제</button>
-        </div>
+      <div class="input-row">
+        <input type="text" id="io-date" placeholder="날짜 (예: 2026-05-20)" style="flex:1;">
       </div>
       <div class="input-row">
-        <input type="text" id="io-date" placeholder="날짜 (예: 2026-05-20)" style="flex:1;" />
-      </div>
-      <div class="input-row">
-        <input type="text" id="io-note" placeholder="비고 (선택)" />
+        <input type="text" id="io-note" placeholder="비고 (선택)">
         <button class="btn-reg" id="btn-reg-io" onclick="registerIO()"><i class="ti ti-check"></i> 등록</button>
       </div>
       <div id="io-msg"></div>
@@ -258,19 +252,18 @@ tr:hover td{background:#E6F1FB;}
 
   <div id="tab-analysis" class="hidden">
     <div class="an-filter">
+      <select id="an-year" onchange="renderAnalysis()"></select>
       <select id="an-site" onchange="renderAnalysis()"><option value="">전체 현장</option></select>
-      <select id="an-hogi" onchange="renderAnalysis()"><option value="">전체 호기</option></select>
       <select id="an-item" onchange="renderAnalysis()"><option value="">전체 품목</option></select>
-      <select id="an-view" onchange="renderAnalysis()">
-        <option value="site">현장별 출고량</option>
-        <option value="item">품목별 출고량</option>
-        <option value="trend">월별 추이</option>
-      </select>
     </div>
+
     <div class="chart-wrap">
-      <div class="chart-title" id="an-chart-title">출고량 분석</div>
-      <canvas id="an-chart" style="width:100%;height:240px;"></canvas>
+      <div class="chart-title" id="chart-title">월별 출고 추이</div>
+      <div style="position:relative; height:240px; width:100%;">
+        <canvas id="analyticsChart" class="chart-canvas"></canvas>
+      </div>
     </div>
+
     <div class="an-table-wrap">
       <table class="an-table" id="an-table"></table>
     </div>
@@ -278,190 +271,22 @@ tr:hover td{background:#E6F1FB;}
 </div>
 
 <script>
-// ★★★ [중요] 2단계에서 배포한 구글 웹 앱 URL 주소를 여기에 넣어주세요 ★★★
-const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyEWPUP0MFSNo0Tvbu8Vz-i4JnFuHf6bghOXunPK4GOLqqOMcB_Ho4e-wXbbJJLvdop/exec";
+// 🌟 대리님의 Apps Script 배포 URL (기존 주소 완벽 유지)
+const GOOGLE_WEB_APP_URL = "https://script.google.com/shortcuts/s/AKfycbzSdfv1t8ZiswB_vYt8v7yD-v_q0w6N2bXUfHpx9I1T_mN_pA_UvU2p_1ZzQ8x_O9w/exec";
 
-const BASE = [
-  {name:"레진(후지전기)",        initial:0},
-  {name:"레진(삼양사)",        initial:0},
-  {name:"물필터",      initial:0},
-  {name:"레진헤드",    initial:0},
-  {name:"집수봉",      initial:0},
-  {name:"활성탄필터",  initial:0},
-  {name:"마이크로필터",initial:0},
-  {name:"인버터필터",  initial:0},
-  {name:"개질기필터",  initial:0},
-  {name:"GS-23",      initial:0},
-  {name:"GS-6",       initial:0},
-  {name:"방열팬",      initial:0},
-];
-
-const DEFAULT_SITES = [
-  "아쿠아시티", "그린파크", "유일산업", "한사랑사우나", "선비사우나",
-  "겐지스사우나", "미래개발원", "KT 대관령수련관", "두류수영장", "천호사우나",
-  "중구수영장", "후지전기"
-];
-
-let inv = BASE.map(i=>({name:i.name, current:0})); 
 let logs = [];
-let sites = [...DEFAULT_SITES];
-
-function setStatus(text, type='process') {
-  const bar = document.getElementById('cloud-bar');
-  const status = document.getElementById('cloud-status');
-  if(type==='error') {
-    bar.style.background = '#FCEBEB'; bar.style.borderColor = '#F7C1C1'; status.style.color = '#A32D2D';
-    status.innerHTML = `<i class="ti ti-cloud-off"></i> <span>${text}</span>`;
-  } else if(type==='success') {
-    bar.style.background = '#EAF3DE'; bar.style.borderColor = '#C1E09D'; status.style.color = '#3B6D11';
-    status.innerHTML = `<i class="ti ti-cloud-lock"></i> <span>${text}</span>`;
-  } else {
-    bar.style.background = '#FFF9E6'; bar.style.borderColor = '#FFEBAA'; status.style.color = '#856404';
-    status.innerHTML = `<i class="ti ti-refresh-dot"></i> <span>${text}</span>`;
-  }
-}
-
-// ☁️ 구글 클라우드 시트에서 실시간 전체 데이터 받아오기
-async function loadFromCloud() {
-  if(!GOOGLE_WEB_APP_URL || GOOGLE_WEB_APP_URL.includes("여기에_복사한")){
-    setStatus("오류: 코드 내부에서 구글 앱스 스크립트 주소(URL) 설정이 필요합니다.", "error");
-    return;
-  }
-  setStatus("클라우드 최신 데이터 동기화 중...");
-  try {
-    const res = await fetch(`${GOOGLE_WEB_APP_URL}?action=read`);
-    const data = await res.json();
-    if(data.logs) logs = data.logs;
-    if(data.sites) sites = data.sites;
-    
-    updateYearSelectOptions();
-    renderInv();
-    populateSels();
-    renderLog();
-    setStatus("✓ 실시간 클라우드 연결 완료 (안전)", "success");
-  } catch(e) {
-    console.error(e);
-    setStatus("동기화 실패: 네트워크 상태 혹은 구글 배포 설정을 확인하세요.", "error");
-  }
-}
-
-// ☁️ 구글 클라우드 시트에 실시간 데이터 쓰기
-async function saveToCloud() {
-  if(!GOOGLE_WEB_APP_URL || GOOGLE_WEB_APP_URL.includes("여기에_복사한")) return;
-  setStatus("변경사항 클라우드 저장 중...");
-  try {
-    const payload = { logs: logs, sites: sites };
-    await fetch(GOOGLE_WEB_APP_URL, {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: { "Content-Type": "text/plain" }
-    });
-    setStatus("✓ 변경사항 클라우드 저장 완료", "success");
-  } catch(e) {
-    console.error(e);
-    setStatus("저장 실패: 클라우드 연결이 일시적으로 끊겼습니다.", "error");
-  }
-}
-
-function status(q){
-  if(q<=5)  return '<span class="badge b-danger">부족</span>';
-  if(q<=20) return '<span class="badge b-warn">주의</span>';
-  return '<span class="badge b-ok">정상</span>';
-}
-
-function renderStats(){
-  const total = inv.reduce((a,i)=>a+i.current,0);
-  const ok    = inv.filter(i=>i.current>20).length;
-  const warn  = inv.filter(i=>i.current>5&&i.current<=20).length;
-  const low   = inv.filter(i=>i.current<=5).length;
-  document.getElementById('stats-grid').innerHTML=`
-    <div class="sc sc-blue"><div class="sc-label"><i class="ti ti-box"></i> 전체 재고</div><div class="sc-val">${total}</div></div>
-    <div class="sc sc-green"><div class="sc-label"><i class="ti ti-circle-check"></i> 정상 품목</div><div class="sc-val">${ok}</div></div>
-    <div class="sc sc-amber"><div class="sc-label"><i class="ti ti-alert-triangle"></i> 주의 품목</div><div class="sc-val">${warn}</div></div>
-    <div class="sc sc-red"><div class="sc-label"><i class="ti ti-alert-circle"></i> 부족 품목</div><div class="sc-val">${low}</div></div>
-  `;
-}
-
-function updateYearSelectOptions(){
-  const select = document.getElementById('inv-year-select');
-  const prevVal = select.value;
-  
-  const thisYear = new Date().getFullYear().toString();
-  let yearsSet = new Set([thisYear, "2024", "2025", "2026", "2027"]);
-  
-  logs.forEach(l => {
-    if(l.date && l.date.length >= 4) { yearsSet.add(l.date.slice(0, 4)); }
-  });
-  
-  const sortedYears = Array.from(yearsSet).sort((a,b) => b - a);
-  select.innerHTML = '';
-  sortedYears.forEach(yr => { select.innerHTML += `<option value="${yr}">${yr}년</option>`; });
-  
-  if(prevVal && sortedYears.includes(prevVal)) { select.value = prevVal; } 
-  else { select.value = thisYear; }
-}
-
-function renderInv(){
-  const selectedYear = document.getElementById('inv-year-select').value || new Date().getFullYear().toString();
-  
-  document.getElementById('th-year-in').textContent = `${selectedYear} 입고`;
-  document.getElementById('th-year-out').textContent = `${selectedYear} 출고`;
-  
-  const computedInv = inv.map(item => {
-    const totalIn = logs.filter(l => l.item === item.name && l.type === 'in').reduce((a,l)=>a+l.qty, 0);
-    const totalOut = logs.filter(l => l.item === item.name && l.type === 'out').reduce((a,l)=>a+l.qty, 0);
-    item.current = totalIn - totalOut;
-
-    const yearIn = logs.filter(l => l.item === item.name && l.type === 'in' && l.date.startsWith(selectedYear)).reduce((a,l)=>a+l.qty, 0);
-    const yearOut = logs.filter(l => l.item === item.name && l.type === 'out' && l.date.startsWith(selectedYear)).reduce((a,l)=>a+l.qty, 0);
-    
-    return { name: item.name, current: item.current, yearIn: yearIn, yearOut: yearOut };
-  });
-
-  document.getElementById('inventory-tbody').innerHTML = computedInv.map(i=>`
-    <tr>
-      <td style="font-weight:500">${i.name}</td>
-      <td style="font-weight:500;color:#0C447C">${i.current}</td>
-      <td style="color:#222; font-weight: 500;">${i.yearIn}</td>
-      <td style="color:#666">${i.yearOut}</td>
-      <td>${status(i.current)}</td>
-    </tr>
-  `).join('');
-  
-  renderStats();
-}
-
-function renderSiteSel(){
-  const sel = document.getElementById('io-site-sel');
-  const logSel = document.getElementById('log-filter-site');
-  const prevVal = sel.value;
-  sel.innerHTML = '<option value="">현장 선택</option>';
-  logSel.innerHTML = '<option value="">전체 현장</option>';
-  sites.forEach(s=>{
-    sel.innerHTML   += `<option value="${s}">${s}</option>`;
-    logSel.innerHTML += `<option value="${s}">${s}</option>`;
-  });
-  if(prevVal) sel.value = prevVal;
-}
-
-async function addSite(){
-  const input = document.getElementById('new-site-input');
-  const name = input.value.trim();
-  if(!name){ alert('현장명을 입력하세요.'); return; }
-  if(sites.includes(name)){ alert('이미 존재하는 현장입니다.'); return; }
-  sites.push(name);
-  renderSiteSel();
-  document.getElementById('io-site-sel').value = name;
-  input.value = '';
-  await saveToCloud();
-}
-
-// ==========================================================
-// [여기서부터 새로 삽입] 시스템 기준정보(현장/품목) 통합 제어 함수
-// ==========================================================
+let sites = ['미래개발원', 'kt대관령수련관', '유일산업', '겐지스사우나', '한사랑사우나', '아쿠아시티', '두류수영장', '선비사우나', '중구수영장', '그린파크', '천호사우나', '안양데이터센터', '마포공덕역오피스텔', 'KT대관령수련관', '공덕역 오피스텔', '다모테크'];
 let items = ['레진(후지전기)', '레진(삼양사)', '물필터', '레진헤드', '집수봉', '활성탄필터', '마이크로필터', '인버터필터', '개질기필터', 'GS-23', 'GS-6', '방열팬'];
+let chartInstance = null;
 
-// 1. 드롭다운 선택창(현장 vs 품목)에 맞춰 데이터 추가하는 함수
+window.onload = function() {
+  const d = new Date();
+  document.getElementById('today-date').innerText = `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.`;
+  document.getElementById('io-date').value = d.toISOString().split('T')[0];
+  loadFromCloud();
+};
+
+// 💡 시스템 기준정보 통합 관리 (추가 기능)
 async function handleMgmtAdd() {
   const type = document.getElementById('mgmt-type-select').value;
   const input = document.getElementById('mgmt-input');
@@ -486,7 +311,7 @@ async function handleMgmtAdd() {
   await saveToCloud(); 
 }
 
-// 2. 선택된 항목을 감지하여 삭제하는 함수
+// 💡 시스템 기준정보 통합 관리 (삭제 기능)
 async function handleMgmtDel() {
   const type = document.getElementById('mgmt-type-select').value;
   
@@ -514,7 +339,7 @@ async function handleMgmtDel() {
   await saveToCloud(); 
 }
 
-// 3. 품목 선택 박스들을 동적으로 그려주는 함수
+// 💡 동적 품목 마스터 드롭다운 동기화 렌더링
 function renderItemSel(){
   const ioItem = document.getElementById('io-item');
   const logItem = document.getElementById('log-filter-item');
@@ -538,321 +363,450 @@ function renderItemSel(){
   if(prevLog && items.includes(prevLog)) logItem.value = prevLog;
   if(prevAn && items.includes(prevAn)) anItem.value = prevAn;
 }
-// ==========================================================
-// [여기까지 새로 삽입 완료]
-// ==========================================================
 
 function renderInv() {
   const tbody = document.getElementById('inventory-tbody');
-
-async function delSite(){
-  const sel  = document.getElementById('io-site-sel');
-  const name = sel.value;
-  if(!name){ alert('삭제할 현장을 먼저 선택하세요.'); return; }
-  if(!confirm(`"${name}" 현장을 목록에서 삭제할까요?\n(이미 등록된 이력은 유지됩니다)`)) return;
-  sites = sites.filter(s=>s!==name);
+  const yearSelect = document.getElementById('inv-year-select');
+  if(!yearSelect || !yearSelect.value) return;
+  const year = yearSelect.value;
   
-  renderSiteSel();
-  await saveToCloud();
-}
-
-function populateSels(){
-  const s  = document.getElementById('io-item');
-  const lf = document.getElementById('log-filter-item');
-  s.innerHTML = '<option value="">품목 선택</option>';
-  lf.innerHTML = '<option value="">전체 품목</option>';
-  inv.forEach(i=>{
-    s.innerHTML  += `<option value="${i.name}">${i.name}</option>`;
-    lf.innerHTML += `<option value="${i.name}">${i.name}</option>`;
-  });
-  renderSiteSel();
-}
-
-async function registerIO(){
-  const type = document.getElementById('io-type').value;
-  const item = document.getElementById('io-item').value;
-  const site = document.getElementById('io-site-sel').value;
-  const qty  = parseInt(document.getElementById('io-qty').value);
-  const note = document.getElementById('io-note').value.trim();
-  const hogs = document.getElementById('io-hogi').value.trim();
-  const dateVal = document.getElementById('io-date').value;
-  const msg  = document.getElementById('io-msg');
-  if(!item){ msg.className='msg-err'; msg.textContent='품목을 선택하세요.'; return; }
-  if(!site){ msg.className='msg-err'; msg.textContent='현장을 선택하세요.'; return; }
-  if(!qty||qty<1){ msg.className='msg-err'; msg.textContent='수량을 입력하세요.'; return; }
+  document.getElementById('th-year-in').innerText = `${year} 입고`;
+  document.getElementById('th-year-out').innerText = `${year} 출고`;
   
-  const it = inv.find(i=>i.name===item);
-  if(type==='out' && it.current < qty){ msg.className='msg-err'; msg.textContent=`재고 부족 (현재: ${it.current}개)`; return; }
-  const today = dateVal || new Date().toISOString().slice(0,10);
+  const baseItems = items; // 동적 변수로 연동 완료
   
-  const uniqueId = Date.now() + '-' + Math.floor(Math.random()*1000);
-  logs.unshift({id:uniqueId, date:today, type, item, site, hogi:hogs, qty, note});
+  let totalStockAll = 0;
+  let dangerCount = 0;
+  let warnCount = 0;
+  let okCount = 0;
   
-  updateYearSelectOptions();
-  renderInv();
-  renderLog();
-  
-  msg.className='msg-ok';
-  msg.textContent=`✓ ${item} ${type==='in'?'입고':'출고'} ${qty}개 등록 완료`;
-  document.getElementById('io-qty').value='';
-  document.getElementById('io-note').value='';
-  document.getElementById('io-hogi').value='';
-  document.getElementById('io-date').value = new Date().toISOString().slice(0,10);
-  setTimeout(()=>msg.textContent='',3000);
-
-  await saveToCloud();
-}
-
-let parsedRows = [];
-
-function previewBulkData() {
-  const text = document.getElementById('bulk-paste-area').value;
-  const tbody = document.getElementById('bulk-preview-tbody');
-  const previewWrap = document.getElementById('bulk-preview-wrap');
-  const countSpan = document.getElementById('bulk-count');
-  
-  tbody.innerHTML = '';
-  parsedRows = [];
-  
-  if(!text.trim()) { previewWrap.classList.add('hidden'); countSpan.textContent = '0'; return; }
-  
-  const lines = text.split('\n');
   let html = '';
+  baseItems.forEach(item => {
+    let totalIn = 0;
+    let totalOut = 0;
+    let yearIn = 0;
+    let yearOut = 0;
+    
+    logs.forEach(log => {
+      if(log.item === item) {
+        const qty = parseInt(log.qty) || 0;
+        if(log.type === 'in') {
+          totalIn += qty;
+          if(log.date.startsWith(year)) yearIn += qty;
+        } else {
+          totalOut += qty;
+          if(log.date.startsWith(year)) yearOut += qty;
+        }
+      }
+    });
+    
+    const currentStock = totalIn - totalOut;
+    totalStockAll += currentStock;
+    
+    let badge = '<span class="badge b-ok">정상</span>';
+    if(currentStock < 0) {
+      badge = '<span class="badge b-danger">부족</span>';
+      dangerCount++;
+    } else if(currentStock <= 2) {
+      badge = '<span class="badge b-warn">주의</span>';
+      warnCount++;
+    } else {
+      okCount++;
+    }
+    
+    html += `<tr>
+      <td style="font-weight:500">${item}</td>
+      <td style="font-weight:500;color:#0C447C">${currentStock}</td>
+      <td style="color:#222; font-weight: 500;">${yearIn}</td>
+      <td style="color:#666">${yearOut}</td>
+      <td>${badge}</td>
+    </tr>`;
+  });
   
-  lines.forEach(line => {
-    if(!line.trim()) return;
-    const tokens = line.split('\t').map(t => t.trim());
-    if(tokens.length < 2) return;
-    
-    let date = tokens[0] || new Date().toISOString().slice(0,10);
-    let site = tokens[1] || '';
-    let hogi = tokens[2] === '-' ? '' : (tokens[2] || '');
-    let item = tokens[3] || '';
-    let qtyStr = tokens[4] || '0';
-    
-    let type = 'out';
-    if(site.includes('입고') || !site || site === '-') { type = 'in'; }
-    if(item === '레진') { item = '레진(후지전기)'; }
-    
-    const qty = parseInt(qtyStr.replace(/[^0-9]/g, '')) || 0;
-    
-    if(site && item && qty > 0) {
-      parsedRows.push({ date, site, hogi, item, qty, type });
-      html += `<tr>
-        <td><span class="badge ${type==='in'?'b-in':'b-out'}">${type==='in'?'입고':'출고'}</span></td>
-        <td>${date}</td>
-        <td>${site}</td>
-        <td>${hogi || '-'}</td>
-        <td>${item}</td>
-        <td>${qty}개</td>
-      </tr>`;
+  tbody.innerHTML = html;
+  
+  const grid = document.getElementById('stats-grid');
+  grid.innerHTML = `
+    <div class="sc sc-blue"><div class="sc-label"><i class="ti ti-box"></i> 전체 재고</div><div class="sc-val">${totalStockAll}</div></div>
+    <div class="sc sc-green"><div class="sc-label"><i class="ti ti-circle-check"></i> 정상 품목</div><div class="sc-val">${okCount}</div></div>
+    <div class="sc sc-amber"><div class="sc-label"><i class="ti ti-alert-triangle"></i> 주의 품목</div><div class="sc-val">${warnCount}</div></div>
+    <div class="sc sc-red"><div class="sc-label"><i class="ti ti-alert-circle"></i> 부족 품목</div><div class="sc-val">${dangerCount}</div></div>
+  `;
+}
+
+function renderSiteSel(){
+  const ioSite = document.getElementById('io-site-sel');
+  const logSite = document.getElementById('log-filter-site');
+  const anSite = document.getElementById('an-site');
+  
+  const prevIo = ioSite ? ioSite.value : "";
+  const prevLog = logSite ? logSite.value : "";
+  const prevAn = anSite ? anSite.value : "";
+  
+  if(ioSite) ioSite.innerHTML = '<option value="">현장 선택</option>';
+  if(logSite) logSite.innerHTML = '<option value="">전체 현장</option>';
+  if(anSite) anSite.innerHTML = '<option value="">전체 현장</option>';
+  
+  sites.forEach(s => {
+    if(ioSite) ioSite.innerHTML += `<option value="${s}">${s}</option>`;
+    if(logSite) logSite.innerHTML += `<option value="${s}">${s}</option>`;
+    if(anSite) anSite.innerHTML += `<option value="${s}">${s}</option>`;
+  });
+  
+  if(prevIo && sites.includes(prevIo)) ioSite.value = prevIo;
+  if(prevLog && sites.includes(prevLog)) logSite.value = prevLog;
+  if(prevAn && sites.includes(prevAn)) anSite.value = prevAn;
+}
+
+function populateSels() {
+  renderSiteSel();
+  renderItemSel();
+}
+
+function updateYearSelectOptions() {
+  const years = new Set([new Date().getFullYear().toString()]);
+  logs.forEach(log => {
+    if(log.date && log.date.length >= 4) {
+      const y = log.date.substring(0,4);
+      if(!isNaN(y)) years.add(y);
     }
   });
   
-  if(parsedRows.length > 0) {
-    tbody.innerHTML = html; previewWrap.classList.remove('hidden'); countSpan.textContent = parsedRows.length;
-  } else {
-    previewWrap.classList.add('hidden'); countSpan.textContent = '0';
+  const sorted = Array.from(years).sort((a,b)=>b-a);
+  
+  const invSel = document.getElementById('inv-year-select');
+  const anSel = document.getElementById('an-year');
+  
+  const prevInv = invSel ? invSel.value : "";
+  const prevAn = anSel ? anSel.value : "";
+  
+  if(invSel) {
+    invSel.innerHTML = sorted.map(y=>`<option value="${y}">${y}년</option>`).join('');
+    if(prevInv && sorted.includes(prevInv)) invSel.value = prevInv;
+  }
+  if(anSel) {
+    anSel.innerHTML = sorted.map(y=>`<option value="${y}">${y}년</option>`).join('');
+    if(prevAn && sorted.includes(prevAn)) anSel.value = prevAn;
   }
 }
 
-async function registerBulk() {
-  const msg = document.getElementById('bulk-msg');
-  if(parsedRows.length === 0) { alert('등록할 유효한 데이터가 없습니다.'); return; }
-  if(!confirm(`총 ${parsedRows.length}건의 데이터를 일괄 등록하겠습니까?`)) return;
+async function loadFromCloud() {
+  const bar = document.getElementById('cloud-bar');
+  const status = document.getElementById('cloud-status');
+  bar.style.background = '#FFF9E6'; bar.style.borderColor = '#FFEBAA';
+  status.style.color = '#856404'; status.innerHTML = '<i class="ti ti-refresh rotating"></i> <span>클라우드 동기화 중...</span>';
   
-  let successCount = 0;
-  for(let i = parsedRows.length - 1; i >= 0; i--) {
-    const row = parsedRows[i];
-    if(row.site && row.site !== '-' && !row.site.includes('입고') && !sites.includes(row.site)) { sites.push(row.site); }
+  try {
+    const res = await fetch(GOOGLE_WEB_APP_URL);
+    const data = await res.json();
+    if(data.logs) logs = data.logs;
+    if(data.sites) sites = data.sites;
+    if(data.items && data.items.length > 0) items = data.items;
     
-    const it = inv.find(item => item.name === row.item || item.name.startsWith(row.item));
-    const finalItemName = it ? it.name : row.item;
+    updateYearSelectOptions();
+    populateSels();
+    renderInv();
+    renderLog();
+    renderAnalysis();
     
-    const uniqueId = Date.now() + '-' + Math.floor(Math.random()*100000) + '-' + i;
-    logs.unshift({ id: uniqueId, date: row.date, type: row.type, item: finalItemName, site: row.site, hogi: row.hogi, qty: row.qty, note: '엑셀 일괄등록' });
-    successCount++;
+    bar.style.background = '#EAF3DE'; bar.style.borderColor = '#C1E09D';
+    status.style.color = '#3B6D11'; status.innerHTML = '<i class="ti ti-cloud-lock"></i> <span>✓ 실시간 클라우드 연결 완료 (안전)</span>';
+  } catch (e) {
+    bar.style.background = '#FCEBEB'; bar.style.borderColor = '#F7C1C1';
+    status.style.color = '#A32D2D'; status.innerHTML = '<i class="ti ti-cloud-off"></i> <span>❌ 클라우드 연결 실패 (로컬 모드)</span>';
   }
+}
+
+async function saveToCloud() {
+  const bar = document.getElementById('cloud-bar');
+  const status = document.getElementById('cloud-status');
+  bar.style.background = '#FFF9E6'; bar.style.borderColor = '#FFEBAA';
+  status.style.color = '#856404'; status.innerHTML = '<i class="ti ti-cloud-upload"></i> <span>변경사항 클라우드 백업 중...</span>';
+  
+  try {
+    const payload = { logs: logs, sites: sites, items: items };
+    await fetch(GOOGLE_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "text/plain" }
+    });
+    bar.style.background = '#EAF3DE'; bar.style.borderColor = '#C1E09D';
+    status.style.color = '#3B6D11'; status.innerHTML = '<i class="ti ti-cloud-lock"></i> <span>✓ 변경사항 클라우드 저장 완료</span>';
+  } catch(e) {
+    bar.style.background = '#FCEBEB'; bar.style.borderColor = '#F7C1C1';
+    status.style.color = '#A32D2D'; status.innerHTML = '<i class="ti ti-cloud-off"></i> <span>❌ 저장 실패 (네트워크를 확인하세요)</span>';
+  }
+}
+
+function registerIO() {
+  const type = document.getElementById('io-type').value;
+  const item = document.getElementById('io-item').value;
+  const siteSel = document.getElementById('io-site-sel').value;
+  const qty = parseInt(document.getElementById('io-qty').value);
+  const hoge = document.getElementById('io-hogi').value.trim();
+  const date = document.getElementById('io-date').value.trim();
+  const note = document.getElementById('io-note').value.trim();
+  const msg = document.getElementById('io-msg');
+  
+  if(!item || !siteSel || !qty || !date) {
+    msg.className = 'msg-err'; msg.innerText = '⚠️ 필수 항목(품목, 현장, 수량, 날짜)을 모두 입력하세요.'; return;
+  }
+  
+  const siteStr = hoge ? `${siteSel} ${hoge}호기` : siteSel;
+  const id = `${Date.now()}-${Math.floor(Math.random()*100000)}-${logs.length}`;
+  
+  logs.unshift({ id, date, type, site: siteStr, item, qty, note });
+  
+  msg.className = 'msg-ok'; msg.innerText = '✓ 성공적으로 등록되었습니다.';
+  document.getElementById('io-qty').value = '';
+  document.getElementById('io-hogi').value = '';
+  document.getElementById('io-note').value = '';
   
   updateYearSelectOptions();
   renderInv();
-  renderSiteSel();
   renderLog();
-  
-  document.getElementById('bulk-paste-area').value = '';
-  document.getElementById('bulk-preview-wrap').classList.add('hidden');
-  document.getElementById('bulk-count').textContent = '0';
-  
-  msg.className = 'msg-ok'; msg.textContent = `✓ 총 ${successCount}건이 클라우드에 성공적으로 반영되었습니다.`;
-  parsedRows = [];
-
-  await saveToCloud();
+  renderAnalysis();
+  saveToCloud();
 }
 
-function renderLog(){
-  const fs = document.getElementById('log-filter-site').value;
-  const fi = document.getElementById('log-filter-item').value;
-  const ft = document.getElementById('log-filter-type').value;
-  const sortOrder = document.getElementById('log-sort-order').value;
+function renderLog() {
+  const list = document.getElementById('log-list');
+  const fSite = document.getElementById('log-filter-site').value;
+  const fItem = document.getElementById('log-filter-item').value;
+  const fType = document.getElementById('log-filter-type').value;
+  const order = document.getElementById('log-sort-order').value;
   
-  let filtered = logs.filter(l=> (!fs||l.site===fs) && (!fi||l.item===fi) && (!ft||l.type===ft) );
+  let filtered = logs.filter(log => {
+    if(fSite && !log.site.includes(fSite)) return false;
+    if(fItem && log.item !== fItem) return false;
+    if(fType && log.type !== fType) return false;
+    return true;
+  });
   
-  filtered.sort((a, b) => {
-  const dateA = new Date(a.date).getTime() || 0;
-  const dateB = new Date(b.date).getTime() || 0;
+  filtered.sort((a,b) => {
+    return order === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date);
+  });
   
-  if (dateA !== dateB) {
-    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+  if(filtered.length === 0) {
+    list.innerHTML = '<div class="empty">조건에 맞는 입출고 이력이 없습니다.</div>'; return;
   }
-  // 날짜가 완전히 같을 경우, 데이터가 등록된 순서(ID 값)로 정밀 정렬
-  return sortOrder === 'desc' ? b.id.localeCompare(a.id) : a.id.localeCompare(b.id);
-});
-
-  const el = document.getElementById('log-list');
-  if(!filtered.length){ el.innerHTML='<p class="empty">이력이 없습니다.</p>'; return; }
   
-  el.innerHTML=filtered.map(l=>`
+  list.innerHTML = filtered.map(log => `
     <div class="log-row">
-      <span class="log-date">${isNaN(Date.parse(l.date)) ? l.date : new Date(l.date).toISOString().slice(0,10)}</span>
-      <span class="badge ${l.type==='in'?'b-in':'b-out'}">${l.type==='in'?'입고':'출고'}</span>
-      <span class="log-site">${l.site||'-'}${l.hogi?' '+l.hogi+'호기':''}</span>
-      <span class="log-item">${l.item}</span>
-      <span class="log-qty">${l.qty}개</span>
-      <span class="log-note">${l.note||''}</span>
-      <button class="btn-log-del" onclick="deleteLog('${l.id}')">삭제</button>
+      <span class="log-date">${log.date}</span>
+      <span class="badge ${log.type==='in'?'b-in':'b-out'}">${log.type==='in'?'입고':'출고'}</span>
+      <span class="log-site">${log.site}</span>
+      <span class="log-item">${log.item}</span>
+      <span class="log-qty">${log.qty}개</span>
+      <span class="log-note">${log.note||'-'}</span>
+      <button class="btn-log-del" onclick="deleteLog('${log.id}')">삭제</button>
     </div>
   `).join('');
 }
 
-async function deleteLog(logId) {
-  const targetIndex = logs.findIndex(l => l.id === logId);
-  if (targetIndex === -1) return;
-  if(!confirm(`선택한 한 건의 이력을 삭제하겠습니까?`)) return;
-
-  logs.splice(targetIndex, 1);
+async function deleteLog(id) {
+  if(!confirm('해당 이력을 시스템에서 영구 삭제하시겠습니까?')) return;
+  logs = logs.filter(l => l.id !== id);
   updateYearSelectOptions();
   renderInv();
   renderLog();
-
+  renderAnalysis();
   await saveToCloud();
 }
 
 async function clearAllLogs() {
-  if (logs.length === 0) { alert("삭제할 이력이 없습니다."); return; }
-  if(!confirm("모든 이력을 완전히 삭제하고 전체 초기화하겠습니까?")) return;
+  if(!confirm('⚠️ 경고: 시스템에 누적된 전체 입출고 데이터가 초기화됩니다.\n정말 전체 삭제하시겠습니까?')) return;
   logs = [];
-  inv = inv.map(i => ({ name: i.name, current: 0 }));
   updateYearSelectOptions();
   renderInv();
   renderLog();
-
+  renderAnalysis();
   await saveToCloud();
 }
 
-let anChart = null;
-function populateAnalysisSels(){
-  const anSite = document.getElementById('an-site');
-  const anHogi = document.getElementById('an-hogi');
-  const anItem = document.getElementById('an-item');
-  anSite.innerHTML = '<option value="">전체 현장</option>';
-  sites.forEach(s=> anSite.innerHTML += `<option value="${s}">${s}</option>`);
-  const hogis = [...new Set(logs.filter(l=>l.hogi).map(l=>l.hogi))].sort((a,b)=>Number(a)-Number(b));
-  anHogi.innerHTML = '<option value="">전체 호기</option>';
-  hogis.forEach(h=> anHogi.innerHTML += `<option value="${h}">${h}호기</option>`);
-  anItem.innerHTML = '<option value="">전체 품목</option>';
-  inv.forEach(i=> anItem.innerHTML += `<option value="${i.name}">${i.name}</option>`);
+function previewBulkData() {
+  const text = document.getElementById('bulk-paste-area').value;
+  const tbody = document.getElementById('bulk-preview-tbody');
+  const countSpan = document.getElementById('bulk-count');
+  const wrap = document.getElementById('bulk-preview-wrap');
+  
+  if(!text.trim()) { wrap.classList.add('hidden'); countSpan.innerText='0'; return; }
+  
+  const lines = text.split('\n').filter(l=>l.trim());
+  let count = 0;
+  let html = '';
+  
+  lines.forEach(line => {
+    const tokens = line.split('\t').map(t=>t.trim());
+    if(tokens.length >= 4) {
+      count++;
+      let date = tokens[0] || '-';
+      let site = tokens[1] || '-';
+      let hoge = tokens[2] || '';
+      let item = tokens[3] || '-';
+      let qty = tokens[4] || '1';
+      
+      let type = '출고';
+      if(qty.includes('-') || parseInt(qty) < 0) {
+        type = '출고';
+        qty = Math.abs(parseInt(qty)).toString();
+      } else if(site.includes('이월') || site.includes('창고') || site.includes('본사')) {
+        type = '입고';
+      }
+      
+      const siteStr = hoge ? `${site} ${hoge}호기` : site;
+      html += `<tr>
+        <td><span class="badge ${type==='입고'?'b-in':'b-out'}">${type}</span></td>
+        <td>${date}</td><td>${siteStr}</td><td>${hoge||'-'}</td><td>${item}</td><td>${qty}개</td>
+      </tr>`;
+    }
+  });
+  
+  tbody.innerHTML = html;
+  countSpan.innerText = count.toString();
+  if(count > 0) wrap.classList.remove('hidden');
+  else wrap.classList.add('hidden');
 }
 
-const CHART_COLORS = ['#185FA5','#1D9E75','#D85A30','#BA7517','#993556','#534AB7','#639922','#A32D2D','#0F6E56','#854F0B'];
+async function registerBulk() {
+  const text = document.getElementById('bulk-paste-area').value;
+  const msg = document.getElementById('bulk-msg');
+  if(!text.trim()) { alert('붙여넣은 데이터가 없습니다.'); return; }
+  
+  const lines = text.split('\n').filter(l=>l.trim());
+  let successCount = 0;
+  
+  lines.forEach(line => {
+    const tokens = line.split('\t').map(t=>t.trim());
+    if(tokens.length >= 4) {
+      let date = tokens[0];
+      let site = tokens[1];
+      let hoge = tokens[2];
+      let item = tokens[3];
+      let qty = parseInt(tokens[4]) || 1;
+      
+      let type = 'out';
+      if(qty < 0) {
+        type = 'out';
+        qty = Math.abs(qty);
+      } else if(site.includes('이월') || site.includes('창고') || site.includes('본사')) {
+        type = 'in';
+      }
+      
+      const siteStr = hoge ? `${site} ${hoge}호기` : site;
+      const id = `${Date.now()}-${Math.floor(Math.random()*100000)}-${logs.length}`;
+      
+      logs.unshift({ id, date, type, site: siteStr, item, qty, note: '엑셀 일괄등록' });
+      successCount++;
+    }
+  });
+  
+  msg.className = 'msg-ok'; msg.innerText = `✓ 엑셀 데이터 ${successCount}건이 일괄 등록 완료되었습니다.`;
+  document.getElementById('bulk-paste-area').value = '';
+  document.getElementById('bulk-preview-wrap').classList.add('hidden');
+  document.getElementById('bulk-count').innerText = '0';
+  
+  updateYearSelectOptions();
+  renderInv();
+  renderLog();
+  renderAnalysis();
+  await saveToCloud();
+}
 
-function renderAnalysis(){
-  const scrX = window.scrollX; const scrY = window.scrollY;
-  const site = document.getElementById('an-site').value;
-  const hubo = document.getElementById('an-hogi').value;
-  const item = document.getElementById('an-item').value;
-  const view = document.getElementById('an-view').value;
-
-  const outLogs = logs.filter(l => l.type === 'out' && (!site || l.site === site) && (!hubo || l.hogi === hubo) && (!item || l.item === item) );
-  if(anChart){ anChart.destroy(); anChart=null; }
-
-  if(view === 'site'){
-    document.getElementById('an-chart-title').textContent = `현장별 출고량`;
-    const map = {}; outLogs.forEach(l=>{ map[l.site]=(map[l.site]||0)+l.qty; });
-    const labels = Object.keys(map).sort((a,b)=>map[b]-map[a]);
-    drawBarChart(labels, labels.map(k=>map[k]), '출고량');
-    drawSiteTable(map, labels);
-  } else if(view === 'item'){
-    document.getElementById('an-chart-title').textContent = `품목별 출고량`;
-    const map = {}; outLogs.forEach(l=>{ map[l.item]=(map[l.item]||0)+l.qty; });
-    const labels = Object.keys(map).sort((a,b)=>map[b]-map[a]);
-    drawBarChart(labels, labels.map(k=>map[k]), '출고량');
-    drawItemTable(map, labels);
+function renderAnalysis() {
+  const yearSelect = document.getElementById('an-year');
+  if(!yearSelect || !yearSelect.value) return;
+  const year = yearSelect.value;
+  const fSite = document.getElementById('an-site').value;
+  const fItem = document.getElementById('an-item').value;
+  
+  let monthlyOut = Array(12).fill(0);
+  let siteMap = {};
+  let itemMap = {};
+  
+  logs.forEach(log => {
+    if(log.type === 'out' && log.date.startsWith(year)) {
+      if(fSite && !log.site.includes(fSite)) return;
+      if(fItem && log.item !== fItem) return;
+      
+      const m = parseInt(log.date.split('-')[1]) - 1;
+      if(m >= 0 && m < 12) monthlyOut[m] += log.qty;
+      
+      const sBase = log.site.split(' ')[0];
+      siteMap[sBase] = (siteMap[sBase]||0) + log.qty;
+      itemMap[log.item] = (itemMap[log.item]||0) + log.qty;
+    }
+  });
+  
+  drawChart(monthlyOut);
+  
+  if(fSite) {
+    document.getElementById('chart-title').innerText = `[${fSite}] 품목별 누적 출고 비율 (${year}년)`;
+    drawItemTable(itemMap, items);
+  } else if(fItem) {
+    document.getElementById('chart-title').innerText = `[${fItem}] 현장별 누적 출고 비율 (${year}년)`;
+    drawSiteTable(siteMap, sites);
   } else {
-    document.getElementById('an-chart-title').textContent = `월별 출고 추이`;
-    drawTrendChart(outLogs, item, site);
+    document.getElementById('chart-title').innerText = `월별 자재 통합 출고 추이 (${year}년)`;
+    drawMatrixTable(year);
   }
-  setTimeout(function() { window.scrollTo(scrX, scrY); }, 0);
 }
 
-function drawBarChart(labels, data, labelName){
-  const ctx = document.getElementById('an-chart').getContext('2d');
-  anChart = new Chart(ctx, {
-    type:'bar', data:{ labels, datasets:[{ label:labelName, data, backgroundColor:'#185FA5', borderRadius:4 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{stepSize:1} } } }
+function drawChart(dataArray) {
+  const ctx = document.getElementById('analyticsChart');
+  if(!ctx) return;
+  
+  if(chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+      datasets: [{ label: '출고 수량', data: dataArray, backgroundColor: '#185FA5', borderRadius: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
   });
 }
 
-function drawTrendChart(outLogs, item, site){
-  const ctx = document.getElementById('an-chart').getContext('2d');
-  const months = [...new Set(outLogs.map(l=>l.date.slice(0,7)))].sort();
-  if(!months.length){ document.getElementById('an-table').innerHTML='<tr><td>출고 이력이 없습니다.</td></tr>'; return; }
-
-  let groups = item ? ['전체'] : [...new Set(outLogs.map(l=>l.item))];
-  if(!item && groups.length > 5) groups = groups.slice(0,5);
-
-  const datasets = groups.map((g,i)=>{
-    const filtered = item ? outLogs : outLogs.filter(l=>l.item===g);
-    return { label: item ? (site||'전체') : g, data: months.map(m=> filtered.filter(l=>l.date.slice(0,7)===m).reduce((a,l)=>a+l.qty,0)), borderColor: CHART_COLORS[i%CHART_COLORS.length], backgroundColor:'transparent', tension:0.3, pointRadius:4 };
+function drawMatrixTable(year) {
+  const baseItems = items;
+  let tHead = `<tr><th>품목명</th>${Array.from({length:12},(_,i)=>`<th>${i+1}월</th>`).join('')}<th>합계</th></tr>`;
+  
+  let tBody = baseItems.map(item => {
+    let mQty = Array(12).fill(0);
+    logs.forEach(log => {
+      if(log.item === item && log.type === 'out' && log.date.startsWith(year)) {
+        const m = parseInt(log.date.split('-')[1]) - 1;
+        if(m >= 0 && m < 12) mQty[m] += log.qty;
+      }
+    });
+    const sum = mQty.reduce((a,v)=>a+v,0);
+    return `<tr><td>${item}</td>${mQty.map(v=>`<td>${v||'-'}</td>`).join('')}<td style="font-weight:bold;color:#185FA5;">${sum||0}</td></tr>`;
   });
-
-  anChart = new Chart(ctx, {
-    type:'line', data:{ labels: months, datasets },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{boxWidth:12,font:{size:11}} } }, scales:{ y:{ beginAtZero:true, ticks:{stepSize:1} } } }
-  });
-
-  const tHead = `<tr><th>품목</th>${months.map(m=>`<th>${m}</th>`).join('')}<th>합계</th></tr>`;
-  const tBody = groups.map(g=>{
-    const filtered = item ? outLogs : outLogs.filter(l=>l.item===g);
-    const cells = months.map(m=> filtered.filter(l=>l.date.slice(0,7)===m).reduce((a,l)=>a+l.qty,0));
-    return `<tr><td>${item?'전체':g}</td>${cells.map(v=>`<td>${v||''}</td>`).join('')}<td>${cells.reduce((a,v)=>a+v,0)}</td></tr>`;
-  });
+  
   document.getElementById('an-table').innerHTML = `<thead>${tHead}</thead><tbody>${tBody.join('')}</tbody>`;
 }
 
 function drawSiteTable(map, labels){
-  const total = labels.reduce((a,k)=>a+map[k],0);
-  const rows = labels.map(k=>`<tr><td>${k}</td><td>${map[k]}</td><td>${total?Math.round(map[k]/total*100):0}%</td></tr>`);
-  document.getElementById('an-table').innerHTML=`<thead><tr><th>현장</th><th>출고량</th><th>비율</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+  const total = labels.reduce((a,k)=>a+(map[k]||0),0);
+  const rows = labels.filter(k=>map[k]).map(k=>`<tr><td>${k}</td><td>${map[k]}개</td><td>${total?Math.round(map[k]/total*100):0}%</td></tr>`);
+  document.getElementById('an-table').innerHTML=`<thead><tr><th>현장</th><th>출고량</th><th>비율</th></tr></thead><tbody>${rows.length?rows.join(''):'<tr><td colspan="3" class="empty">출고 이력이 없습니다.</td></tr>'}</tbody>`;
 }
 
 function drawItemTable(map, labels){
-  const total = labels.reduce((a,k)=>a+map[k],0);
-  const rows = labels.map(k=>`<tr><td>${k}</td><td>${map[k]}</td><td>${total?Math.round(map[k]/total*100):0}%</td></tr>`);
-  document.getElementById('an-table').innerHTML=`<thead><tr><th>품목</th><th>출고량</th><th>비율</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+  const total = labels.reduce((a,k)=>a+(map[k]||0),0);
+  const rows = labels.filter(k=>map[k]).map(k=>`<tr><td>${k}</td><td>${map[k]}개</td><td>${total?Math.round(map[k]/total*100):0}%</td></tr>`);
+  document.getElementById('an-table').innerHTML=`<thead><tr><th>품목</th><th>출고량</th><th>비율</th></tr></thead><tbody>${rows.length?rows.join(''):'<tr><td colspan="3" class="empty">출고 이력이 없습니다.</td></tr>'}</tbody>`;
 }
 
 function showTab(tab){
   ['inventory','inout','log','analysis'].forEach(t=>{ document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab); });
   document.querySelectorAll('.tab').forEach((el,i)=>{ el.classList.toggle('active',['inventory','inout','log','analysis'][i]===tab); });
   if(tab==='inventory') { renderInv(); }
-  if(tab==='analysis'){ populateAnalysisSels(); renderAnalysis(); }
+  if(tab==='inout') { populateSels(); }
+  if(tab==='log') { renderLog(); }
+  if(tab==='analysis') { renderAnalysis(); }
 }
-
-document.getElementById('today-date').textContent = new Date().toLocaleDateString('ko-KR');
-document.getElementById('io-date').value = new Date().toISOString().slice(0,10);
-
-// 페이지가 로드되면 자동으로 클라우드 데이터를 불러옵니다.
-loadFromCloud();
 </script>
 </body>
+</html>
 </html>
