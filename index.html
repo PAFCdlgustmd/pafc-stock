@@ -178,11 +178,15 @@ tr:hover td{background:#E6F1FB;}
       </div>
 
      <div class="site-mgmt" id="site-mgmt-box">
-        <div class="site-mgmt-title"><i class="ti ti-building"></i> 현장 관리</div>
-        <div class="new-site-row">
-          <input type="text" id="new-site-input" placeholder="새 현장명 입력 (예: 유일산업)">
-          <button class="btn-add-site" onclick="addSite()"><i class="ti ti-plus"></i> 추가</button>
-          <button class="btn-del-site" onclick="delSite()"><i class="ti ti-trash"></i> 삭제</button>
+        <div class="site-mgmt-title"><i class="ti ti-settings"></i> 시스템 기준 정보 관리</div>
+        <div class="new-site-row" style="display: flex; gap: 5px;">
+          <select id="mgmt-type-select" style="width: 90px; padding: 6px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+            <option value="site">현장</option>
+            <option value="item">품목</option>
+          </select>
+          <input type="text" id="mgmt-input" placeholder="이름을 입력하세요" style="flex: 1;">
+          <button class="btn-add-site" onclick="handleMgmtAdd()"><i class="ti ti-plus"></i> 추가</button>
+          <button class="btn-del-site" onclick="handleMgmtDel()"><i class="ti ti-trash"></i> 삭제</button>
         </div>
       </div>
 
