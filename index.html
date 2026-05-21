@@ -177,15 +177,23 @@ tr:hover td{background:#E6F1FB;}
         <input type="text" id="io-hogi" placeholder="호기 (예: 3, 5, 없으면 비워두세요)" style="flex:1;" />
       </div>
 
-      <div class="site-mgmt" id="site-mgmt-box">
+     <div class="site-mgmt" id="site-mgmt-box">
         <div class="site-mgmt-title"><i class="ti ti-building"></i> 현장 관리</div>
         <div class="new-site-row">
-          <input type="text" id="new-site-input" placeholder="새 현장명 입력 (예: 유일산업)" />
+          <input type="text" id="new-site-input" placeholder="새 현장명 입력 (예: 유일산업)">
           <button class="btn-add-site" onclick="addSite()"><i class="ti ti-plus"></i> 추가</button>
           <button class="btn-del-site" onclick="delSite()"><i class="ti ti-trash"></i> 삭제</button>
         </div>
       </div>
 
+      <div class="site-mgmt" id="item-mgmt-box" style="margin-top: 10px;">
+        <div class="site-mgmt-title"><i class="ti ti-box"></i> 품목 관리</div>
+        <div class="new-site-row">
+          <input type="text" id="new-item-input" placeholder="새 품목명 입력 (예: 센서필터)">
+          <button class="btn-add-site" onclick="addItem()"><i class="ti ti-plus"></i> 추가</button>
+          <button class="btn-del-site" onclick="delItem()"><i class="ti ti-trash"></i> 삭제</button>
+        </div>
+      </div>
       <div class="input-row">
         <input type="text" id="io-date" placeholder="날짜 (예: 2026-05-20)" style="flex:1;" />
       </div>
