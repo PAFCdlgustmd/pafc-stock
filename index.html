@@ -607,7 +607,7 @@ function renderLog(){
   
   el.innerHTML=filtered.map(l=>`
     <div class="log-row">
-      <span class="log-date">${l.date}</span>
+      <span class="log-date">${isNaN(Date.parse(l.date)) ? l.date : new Date(l.date).toISOString().slice(0,10)}</span>
       <span class="badge ${l.type==='in'?'b-in':'b-out'}">${l.type==='in'?'입고':'출고'}</span>
       <span class="log-site">${l.site||'-'}${l.hogi?' '+l.hogi+'호기':''}</span>
       <span class="log-item">${l.item}</span>
